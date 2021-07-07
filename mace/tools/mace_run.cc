@@ -31,6 +31,7 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <thread>
 
 #include "gflags/gflags.h"
 #include "mace/core/runtime/runtime.h"
@@ -618,6 +619,7 @@ bool RunModel(const std::string &model_name,
           } else {
             int64_t t1 = NowMicros();
             total_run_duration += (t1 - t0);
+            LOG(INFO) << "Run latency: " << t1 << " ms" << t0 << " ms";
             if (FLAGS_benchmark) {
               op_stat.StatMetadata(metadata);
             }
@@ -767,10 +769,30 @@ int Main(int argc, char **argv) {
   bool ret = false;
   for (int i = 0; i < FLAGS_restart_round; ++i) {
     VLOG(0) << "restart round " << i;
-    ret = RunModel(FLAGS_model_name, input_names, input_shape_vec,
+    //ret = RunModel(FLAGS_model_name, input_names, input_shape_vec,
+    //               input_data_types, input_data_formats, output_names,
+    //               output_shape_vec, output_data_types, output_data_formats,
+    //               cpu_float32_performance);
+    std::thread run_1(RunModel, FLAGS_model_name, input_names, input_shape_vec,
                    input_data_types, input_data_formats, output_names,
                    output_shape_vec, output_data_types, output_data_formats,
                    cpu_float32_performance);
+    std::thread run_2(RunModel, FLAGS_model_name, input_names, input_shape_vec,
+                   input_data_types, input_data_formats, output_names,
+                   output_shape_vec, output_data_types, output_data_formats,
+                   cpu_float32_performance);
+    std::thread run_3(RunModel, FLAGS_model_name, input_names, input_shape_vec,
+                   input_data_types, input_data_formats, output_names,
+                   output_shape_vec, output_data_types, output_data_formats,
+                   cpu_float32_performance);
+    std::thread run_4(RunModel, FLAGS_model_name, input_names, input_shape_vec,
+                   input_data_types, input_data_formats, output_names,
+                   output_shape_vec, output_data_types, output_data_formats,
+                   cpu_float32_performance);
+    run_1.join();
+    run_2.join();
+    run_3.join();
+    run_4.join();
   }
   if (ret) {
     return 0;
